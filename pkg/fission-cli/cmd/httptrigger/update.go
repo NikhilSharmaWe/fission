@@ -26,6 +26,7 @@ import (
 	fv1 "github.com/fission/fission/pkg/apis/core/v1"
 	"github.com/fission/fission/pkg/fission-cli/cliwrapper/cli"
 	"github.com/fission/fission/pkg/fission-cli/cmd"
+	"github.com/fission/fission/pkg/fission-cli/cmd/spec"
 	"github.com/fission/fission/pkg/fission-cli/console"
 	flagkey "github.com/fission/fission/pkg/fission-cli/flag/key"
 	"github.com/fission/fission/pkg/fission-cli/util"
@@ -148,7 +149,14 @@ func (opts *UpdateSubCommand) complete(input cli.Input) (err error) {
 }
 
 func (opts *UpdateSubCommand) run(input cli.Input) error {
-
+	if input.Bool(flagkey.SpecSave) {
+		specFile := fmt.Sprintf("route-%v.yaml", opts.trigger.ObjectMeta.Name)
+		err := spec.SpecSaveUpdate(*opts.trigger, specFile)
+		if err != nil {
+			return errors.Wrap(err, "error saving HTTP trigger spec")
+		}
+		return nil
+	}
 	err := util.CheckHTTPTriggerDuplicates(input.Context(), opts.Client(), opts.trigger)
 	if err != nil {
 		return errors.Wrap(err, "Error while creating HTTP Trigger")
