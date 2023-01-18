@@ -197,6 +197,73 @@ func SpecSave(resource interface{}, specFile string) error {
 	return nil
 }
 
+// save saves object encoded value to spec file under given spec directory
+func saveUpdate(data []byte, specDir string, specFile string) error {
+	// verify
+	if _, err := os.Stat(filepath.Join(specDir, "fission-deployment-config.yaml")); os.IsNotExist(err) {
+		return errors.Wrap(err, "Couldn't find specs, run `fission spec init` first")
+	}
+
+	filename := filepath.Join(specDir, specFile)
+	// check if the file is new
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return errors.Errorf("spec file does not exists")
+	}
+
+	// open spec file to truncate and write
+	f, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return errors.Wrap(err, "couldn't create spec file")
+	}
+	defer f.Close()
+
+	err = f.Truncate(0)
+	if err != nil {
+		return errors.Wrap(err, "couldn't truncate the spec file")
+	}
+
+	// write our resource
+	_, err = f.Write(data)
+	if err != nil {
+		return errors.Wrap(err, "couldn't write to spec file")
+	}
+	return nil
+}
+
+// called from `fission * update --spec`
+func SpecSaveUpdate(resource interface{}, specFile string) error {
+	var specDir = "specs"
+
+	meta, kind, data, err := crdToYaml(resource)
+	if err != nil {
+		return err
+	}
+
+	fr, err := ReadSpecs(specDir, util.SPEC_IGNORE_FILE, false)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("error reading spec in '%v'", specDir))
+	}
+
+	exists, err := fr.ExistsInSpecs(resource)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return errors.Errorf("same name resource (%v) does not exists in namespace (%v)", meta.Name, meta.Namespace)
+	}
+
+	err = saveUpdate(data, specDir, specFile)
+	if err != nil {
+		return err
+	}
+
+	console.Info(fmt.Sprintf("Saving %v '%v/%v' to '%v/%v'",
+		kind, meta.Namespace, meta.Name, specDir, specFile))
+
+	return nil
+}
+
 func SpecDry(resource interface{}) error {
 	_, _, data, err := crdToYaml(resource)
 	if err != nil {
