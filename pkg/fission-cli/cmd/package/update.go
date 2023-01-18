@@ -191,7 +191,7 @@ func UpdatePackage(input cli.Input, client cmd.Client, specFile string, pkg *fv1
 			return &pkg.ObjectMeta, nil
 		}
 
-		err = spec.SpecSave(*pkg, specFile)
+		err = spec.SpecSaveUpdate(*pkg, specFile)
 		if err != nil {
 			return nil, errors.Wrap(err, "error saving package spec")
 		}
