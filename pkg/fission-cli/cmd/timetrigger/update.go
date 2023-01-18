@@ -89,7 +89,7 @@ func (opts *UpdateSubCommand) complete(input cli.Input) error {
 func (opts *UpdateSubCommand) run(input cli.Input) error {
 	if input.Bool(flagkey.SpecSave) {
 		specFile := fmt.Sprintf("timetrigger-%v.yaml", opts.trigger.ObjectMeta.Name)
-		err := spec.SpecSave(*opts.trigger, specFile)
+		err := spec.SpecSaveUpdate(*opts.trigger, specFile)
 		if err != nil {
 			return errors.Wrap(err, "error saving time trigger spec")
 		}
