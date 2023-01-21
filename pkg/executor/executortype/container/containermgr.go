@@ -262,7 +262,7 @@ func (caaf *Container) RefreshFuncPods(ctx context.Context, logger *zap.Logger, 
 
 	// Ideally there should be only one deployment but for now we rely on label/selector to ensure that condition
 	for _, deployment := range dep.Items {
-		rvCount, err := referencedResourcesRVSum(ctx, caaf.kubernetesClient, deployment.Namespace, f.Spec.Secrets, f.Spec.ConfigMaps)
+		rvCount, err := referencedResourcesRVSum(ctx, caaf.kubernetesClient, f.ObjectMeta.Namespace, f.Spec.Secrets, f.Spec.ConfigMaps)
 		if err != nil {
 			return err
 		}
