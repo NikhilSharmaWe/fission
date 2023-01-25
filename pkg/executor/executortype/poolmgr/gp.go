@@ -387,6 +387,20 @@ func (gp *GenericPool) specializePod(ctx context.Context, pod *apiv1.Pod, fn *fv
 	if len(podIP) == 0 {
 		return errors.Errorf("Pod %s in namespace %s has no IP", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace)
 	}
+	specializePod := true
+	for _, cm := range fn.Spec.ConfigMaps {
+		if cm.Namespace != pod.ObjectMeta.Namespace {
+			specializePod = false
+		}
+	}
+	for _, sec := range fn.Spec.Secrets {
+		if sec.Namespace != pod.ObjectMeta.Namespace {
+			specializePod = false
+		}
+	}
+	if !specializePod {
+		return fmt.Errorf("function pod namespace and configMap/secret namespace mismatch")
+	}
 	// specialize pod with service
 	if gp.useIstio {
 		svc := utils.GetFunctionIstioServiceName(fn.ObjectMeta.Name, fn.ObjectMeta.Namespace)
